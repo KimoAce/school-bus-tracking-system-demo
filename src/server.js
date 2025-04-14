@@ -30,17 +30,22 @@ async function setupDatabase() {
     
     // In production, just test the connection without trying to create the database
     if (process.env.NODE_ENV === 'production') {
-      const connection = await mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-      });
-      
-      await connection.ping();
-      console.log('Database connection successful');
-      await connection.end();
-      return true;
+      try {
+        const connection = await mysql.createConnection({
+          host: process.env.DB_HOST,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_NAME
+        });
+        
+        await connection.ping();
+        console.log('Database connection successful');
+        await connection.end();
+        return true;
+      } catch (error) {
+        console.error('Warning: Database connection failed, but server will still start:', error);
+        return true; // Return true anyway to allow server to start
+      }
     }
     
     // In development, try to create the database
@@ -61,8 +66,9 @@ async function setupDatabase() {
     console.log('Database setup completed successfully');
     return true;
   } catch (error) {
-    console.error('Database setup failed:', error);
-    return false;
+    console.error('Database setup warning:', error);
+    // Return true anyway to allow server to start in production
+    return process.env.NODE_ENV === 'production';
   }
 }
 
@@ -188,11 +194,19 @@ const PORT = process.env.PORT || 5000;
 // First run setup, then sync database, then start server
 setupDatabase()
   .then(success => {
-    if (!success) {
-      console.error('Database setup failed, server will not start');
+    if (!success && process.env.NODE_ENV !== 'production') {
+      console.error('Database setup failed, server will not start in development mode');
       process.exit(1);
     }
-    return syncDatabase();
+    
+    // Try to sync database, but continue even if it fails in production
+    return syncDatabase().catch(err => {
+      if (process.env.NODE_ENV === 'production') {
+        console.error('Database sync failed, but continuing anyway in production:', err);
+        return Promise.resolve();
+      }
+      throw err;
+    });
   })
   .then(() => {
     // Only seed data in development environment
@@ -211,5 +225,12 @@ setupDatabase()
   })
   .catch(err => {
     console.error('Failed to start server:', err);
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    } else {
+      // In production, try to start the server anyway
+      server.listen(PORT, () => {
+        console.log(`Server running on port ${PORT} (after error recovery)`);
+      });
+    }
   });
