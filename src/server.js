@@ -12,11 +12,10 @@ const seedDemoData = require('./seeders/demo.seeder');
 
 // Define allowed origins
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [
-      // Production frontend URLs (update these with your actual GitHub Pages URLs)
-      'https://your-username.github.io',  // Replace with your actual GitHub Pages URLs
-      // Add other production origins as needed
-    ] 
+  ? (process.env.SOCKET_CORS_ORIGIN ? process.env.SOCKET_CORS_ORIGIN.split(',') : [
+      // Default production origins if SOCKET_CORS_ORIGIN isn't set
+      'https://kimoacce.github.io',
+    ]) 
   : [
       'http://localhost:3000', 
       'http://localhost:5173', 
@@ -27,9 +26,24 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
 // Database setup function
 async function setupDatabase() {
   try {
-    console.log('Starting database setup...');
+    console.log('Connecting to database...');
     
-    // Create connection without database selected
+    // In production, just test the connection without trying to create the database
+    if (process.env.NODE_ENV === 'production') {
+      const connection = await mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+      });
+      
+      await connection.ping();
+      console.log('Database connection successful');
+      await connection.end();
+      return true;
+    }
+    
+    // In development, try to create the database
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST || 'localhost',
       user: process.env.DB_USER || 'root',
