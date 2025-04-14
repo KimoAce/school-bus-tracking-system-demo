@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: school-bus-tracking-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: JWT_SECRET
+        generateValue: true
+      - fromGroup: school-bus-db-config
+    autoDeploy: true
+    healthCheckPath: /api/health
+
+envVarGroups:
+  - name: school-bus-db-config
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: school_bus_tracking_system_demo
