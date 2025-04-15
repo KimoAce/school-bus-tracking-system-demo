@@ -9,21 +9,22 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: 5000
       - key: JWT_SECRET
-        generateValue: true
-      - fromGroup: school-bus-db-config
+        value: 6607dfd98c00733c749a019d0a05c02a343756ab4dc8aeca0456cb55a9d256684bd3a5b2050f93f04d26246d36291410e5e01e979e6b1ebf8cb17e3e8cabb5bc
+      - key: SOCKET_CORS_ORIGIN
+        value: "https://kimoace.github.io,https://kimoace.github.io/school-bus-tracking-system-demo"
+      # Set DATABASE_URL directly instead of individual connection parameters
+      - key: DATABASE_URL
+        value: "mysql://schoolbustry:Bus$Track2025!@db4free.net:3306/school_bus_try"
+      # Comment out individual database parameters since we're using DATABASE_URL
+      # - key: DB_HOST
+      #   value: db4free.net
+      # - key: DB_USER
+      #   value: schoolbustry
+      # - key: DB_PASSWORD
+      #   value: Bus$Track2025!
+      # - key: DB_NAME
+      #   value: school_bus_try
     autoDeploy: true
     healthCheckPath: /api/health
-
-envVarGroups:
-  - name: school-bus-db-config
-    envVars:
-      - key: DB_HOST
-        sync: false
-      - key: DB_USER
-        sync: false
-      - key: DB_PASSWORD
-        sync: false
-      - key: DB_NAME
-        value: school_bus_tracking_system_demo

@@ -57,9 +57,26 @@ const syncDatabase = async () => {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
     
-    // For the first run, use force: true to recreate all tables
-    // After successful setup, change to alter: true for future runs
-    await sequelize.sync({ force: true });
+    // Define sync options based on environment
+    let syncOptions;
+    
+    if (process.env.NODE_ENV === 'production') {
+      // In production, use safer options - ALTER instead of DROP+CREATE
+      syncOptions = { alter: true };
+      console.log('Using ALTER sync option for production');
+    } else {
+      // In development, we can use force: true to recreate tables
+      // Only use force:true if explicitly set, otherwise use alter:true for safety
+      const useForceSync = process.env.DB_FORCE_SYNC === 'true';
+      syncOptions = { 
+        force: useForceSync,
+        alter: !useForceSync
+      };
+      console.log(`Using ${useForceSync ? 'FORCE' : 'ALTER'} sync option for development`);
+    }
+    
+    // Sync with the determined options
+    await sequelize.sync(syncOptions);
     console.log('Database synced successfully');
   } catch (error) {
     console.error('Unable to sync database:', error);

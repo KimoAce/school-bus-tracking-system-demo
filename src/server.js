@@ -14,7 +14,8 @@ const seedDemoData = require('./seeders/demo.seeder');
 const allowedOrigins = process.env.NODE_ENV === 'production' 
   ? (process.env.SOCKET_CORS_ORIGIN ? process.env.SOCKET_CORS_ORIGIN.split(',') : [
       // Default production origins if SOCKET_CORS_ORIGIN isn't set
-      'https://kimoacce.github.io',
+      'https://kimoace.github.io',
+      'https://kimoace.github.io/school-bus-tracking-system-demo'
     ]) 
   : [
       'http://localhost:3000', 
@@ -31,17 +32,28 @@ async function setupDatabase() {
     // In production, just test the connection without trying to create the database
     if (process.env.NODE_ENV === 'production') {
       try {
-        const connection = await mysql.createConnection({
-          host: process.env.DB_HOST,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          database: process.env.DB_NAME
-        });
-        
-        await connection.ping();
-        console.log('Database connection successful');
-        await connection.end();
-        return true;
+        // First check if we have a DATABASE_URL from Railway
+        if (process.env.DATABASE_URL) {
+          console.log('Testing DATABASE_URL connection...');
+          // We'll use the sequelize instance for this test
+          const sequelize = require('./config/database');
+          await sequelize.authenticate();
+          console.log('Database connection via DATABASE_URL successful');
+          return true;
+        } else {
+          // Fallback to individual connection parameters
+          const connection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME
+          });
+          
+          await connection.ping();
+          console.log('Database connection via individual parameters successful');
+          await connection.end();
+          return true;
+        }
       } catch (error) {
         console.error('Warning: Database connection failed, but server will still start:', error);
         return true; // Return true anyway to allow server to start

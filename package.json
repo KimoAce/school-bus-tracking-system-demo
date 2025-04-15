@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "setup": "node src/setup.js"
+    "setup": "node src/setup.js",
+    "test:db": "node src/db-diagnostic.js"
   },
   "engines": {
     "node": ">=18.0.0"
