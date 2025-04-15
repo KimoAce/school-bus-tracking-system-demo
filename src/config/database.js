@@ -2,7 +2,6 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-<<<<<<< HEAD
 // Configuration for database connection
 let sequelize;
 
@@ -10,59 +9,21 @@ let sequelize;
 if (process.env.DATABASE_URL) {
   console.log('Using DATABASE_URL for connection');
   
-  // Create Sequelize instance from the connection string
-  sequelize = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'mysql',
-    dialectOptions: {
-      ssl: process.env.NODE_ENV === 'production' ? {
-        require: true,
-        rejectUnauthorized: false
-      } : false
-    },
-    logging: process.env.NODE_ENV === 'development' ? console.log : false
-  });
-} else {
-  // Use individual connection parameters (local development)
-  console.log('Using individual DB connection parameters');
-  
-  sequelize = new Sequelize(
-    process.env.DB_NAME || 'school_bus_tracking_system_demo',
-    process.env.DB_USER || 'root',
-    process.env.DB_PASSWORD || '',
-    {
-      host: process.env.DB_HOST || 'localhost',
-      dialect: 'mysql',
-      logging: process.env.NODE_ENV === 'development' ? console.log : false,
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      }
-    }
-  );
-}
-=======
-let sequelize;
->>>>>>> 306338223d3b0de814724de1600a74862181ce3e
-
-// Check if DATABASE_URL is available (Railway environment)
-if (process.env.DATABASE_URL) {
-  console.log('Using DATABASE_URL for connection');
   // Log the format of the URL (masking sensitive data)
   const urlParts = process.env.DATABASE_URL.split('@');
   const hostPart = urlParts.length > 1 ? urlParts[1] : 'unknown';
   console.log(`Database URL format check - Host part: ${hostPart}`);
   
   try {
+    // Create Sequelize instance from the connection string
     sequelize = new Sequelize(process.env.DATABASE_URL, {
       dialect: 'mysql',
-      logging: true, // Enable logging for debugging
+      logging: process.env.NODE_ENV === 'development' ? console.log : false,
       dialectOptions: {
-        ssl: {
-          require: false,
+        ssl: process.env.NODE_ENV === 'production' ? {
+          require: true,
           rejectUnauthorized: false
-        },
+        } : false,
         // Add connection timeout
         connectTimeout: 60000
       },
@@ -78,8 +39,9 @@ if (process.env.DATABASE_URL) {
     throw error;
   }
 } else {
-  // Local development fallback
-  console.log('Using local database configuration');
+  // Use individual connection parameters (local development)
+  console.log('Using individual DB connection parameters');
+  
   try {
     sequelize = new Sequelize(
       process.env.DB_NAME || 'school_bus_tracking_system_demo',
@@ -88,7 +50,13 @@ if (process.env.DATABASE_URL) {
       {
         host: process.env.DB_HOST || 'localhost',
         dialect: 'mysql',
-        logging: true // Enable logging for debugging
+        logging: process.env.NODE_ENV === 'development' ? console.log : false,
+        pool: {
+          max: 5,
+          min: 0,
+          acquire: 30000,
+          idle: 10000
+        }
       }
     );
     console.log('Sequelize instance created with local configuration');
